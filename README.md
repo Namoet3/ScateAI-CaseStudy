@@ -127,4 +127,4 @@ This project is created for the Scate AI Engineer case study.
 ## 🙏 Acknowledgments
 
 - [ElevenLabs](https://elevenlabs.io) - Eleven Music API
-- [Replicate]
+- [Replicate](https://replicate.com) - Replicate Audio API
