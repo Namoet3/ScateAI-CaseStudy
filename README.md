@@ -61,6 +61,7 @@ cd backend
 pip install -r requirements.txt
 export ELEVENLABS_API_KEY=your_key_here
 export KITS_API_KEY=your_key_here
+REPLICATE_API_KEY=your_key_here
 python main.py
 ```
 
