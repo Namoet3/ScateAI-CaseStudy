@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - KITS_API_KEY=${KITS_API_KEY}
+      - REPLICATE_API_KEY=${REPLICATE_API_KEY}
+      - RUNPOD_API_KEY=${RUNPOD_API_KEY}
+      - RUNPOD_ENDPOINT_ID=${RUNPOD_ENDPOINT_ID}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

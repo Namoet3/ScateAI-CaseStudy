@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Music Generator | Scate AI Case Study</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); min-height: 100vh; color: #fff; }
+        .header { padding: 30px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        .logo { font-size: 2.5rem; background: linear-gradient(90deg, #ff6b35, #f7c59f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .tagline { color: #aaa; margin-top: 8px; }
+        .main { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .tab-nav { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+        .tab { flex: 1; min-width: 150px; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #aaa; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .tab:hover { background: rgba(255,255,255,0.08); }
+        .tab.active { background: rgba(255,107,53,0.2); border-color: #ff6b35; color: #fff; }
+        .content { background: rgba(255,255,255,0.05); border-radius: 16px; padding: 30px; border: 1px solid rgba(255,255,255,0.1); }
+        .form { display: flex; flex-direction: column; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .label { font-size: 0.9rem; color: #ccc; }
+        .textarea, .select, .input { padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; font-size: 1rem; width: 100%; }
+        .textarea { resize: vertical; min-height: 100px; }
+        .slider { width: 100%; accent-color: #ff6b35; }
+        .submit-btn { padding: 15px 30px; background: linear-gradient(90deg, #ff6b35, #ff8c42); border: none; border-radius: 8px; color: #fff; font-size: 1.1rem; font-weight: 600; cursor: pointer; }
+        .submit-btn:disabled { opacity: 0.5; }
+        .prompt-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .prompt-btn { padding: 8px 12px; background: rgba(255,107,53,0.1); border: 1px solid rgba(255,107,53,0.3); border-radius: 6px; color: #ff8c42; font-size: 0.85rem; cursor: pointer; }
+        .progress-container { margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 12px; }
+        .progress-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-top: 15px; }
+        .progress-fill { height: 100%; background: #60a5fa; border-radius: 4px; transition: width 0.3s; }
+        .footer { text-align: center; padding: 30px; color: #666; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 40px; }
+        .api-config { margin-bottom: 30px; padding: 20px; background: rgba(255,107,53,0.1); border-radius: 12px; border: 1px solid rgba(255,107,53,0.3); }
+        .demo-mode { padding: 15px; background: rgba(74,222,128,0.1); border: 1px solid #4ade80; border-radius: 8px; margin-bottom: 20px; color: #4ade80; }
+        .form-row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; color: #ccc; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+        const PROMPTS = {
+            pop: { name: "Early 2000s Pop", prompt: "Catchy early 2000s pop rock anthem, energetic female vocalist, guitar-driven, upbeat, radio-friendly, 120 BPM" },
+            indie: { name: "Dreamy Indie", prompt: "Dreamy indie rock, reverb-soaked vocals, retro keys, phased guitars, nostalgic" },
+            cinematic: { name: "Cinematic", prompt: "Epic cinematic track, orchestral crescendo, powerful finale, soundtrack" },
+            lofi: { name: "Lo-Fi", prompt: "Chill lo-fi hip hop, dusty vinyl, jazz piano, 85 BPM" },
+        };
+        
+        function App() {
+            const [tab, setTab] = useState('music');
+            const [loading, setLoading] = useState(false);
+            const [progress, setProgress] = useState(0);
+            const [done, setDone] = useState(false);
+            const [prompt, setPrompt] = useState('');
+            const [duration, setDuration] = useState(60);
+            
+            const simulate = async (e) => {
+                e.preventDefault();
+                setLoading(true); setDone(false); setProgress(0);
+                for (let i = 0; i <= 100; i += 10) {
+                    await new Promise(r => setTimeout(r, 300));
+                    setProgress(i);
+                }
+                setLoading(false); setDone(true);
+            };
+            
+            return (
+                <div>
+                    <header className="header">
+                        <h1 className="logo">🎵 AI Music Generator</h1>
+                        <p className="tagline">Create original music and voice covers with AI</p>
+                    </header>
+                    <main className="main">
+                        <div className="demo-mode">
+                            <strong>🎮 Demo Mode</strong> - This demonstrates the UI. Configure API keys in the backend for real generation.
+                        </div>
+                        <nav className="tab-nav">
+                            {[{id:'music',label:'🎼 Original Music',flow:'Flow A'},{id:'cover',label:'🎤 Voice Cover',flow:'Flow B'},{id:'combined',label:'✨ Combined',flow:'Flow C'}].map(t => (
+                                <button key={t.id} className={`tab ${tab===t.id?'active':''}`} onClick={() => setTab(t.id)}>
+                                    <span style={{fontWeight:600}}>{t.label}</span>
+                                    <span style={{fontSize:'0.75rem',opacity:0.7}}>{t.flow}</span>
+                                </button>
+                            ))}
+                        </nav>
+                        <div className="content">
+                            {tab === 'music' && (
+                                <div>
+                                    <h2 style={{marginBottom:8}}>Generate Original Music</h2>
+                                    <p style={{color:'#aaa',marginBottom:25}}>Create unique songs from text using ElevenLabs Eleven Music API</p>
+                                    <form className="form" onSubmit={simulate}>
+                                        <div className="form-group">
+                                            <label className="label">Quick Prompts:</label>
+                                            <div className="prompt-grid">
+                                                {Object.entries(PROMPTS).map(([k,v]) => (
+                                                    <button key={k} type="button" className="prompt-btn" onClick={() => setPrompt(v.prompt)}>{v.name}</button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="label">Music Description</label>
+                                            <textarea className="textarea" value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="Describe your music..." required />
+                                        </div>
+                                        <div className="form-row">
+                                            <div className="form-group" style={{flex:1}}>
+                                                <label className="label">Duration: {duration}s</label>
+                                                <input type="range" className="slider" min="10" max="300" value={duration} onChange={e => setDuration(+e.target.value)} />
+                                            </div>
+                                        </div>
+                                        <button type="submit" className="submit-btn" disabled={loading}>{loading ? '⏳ Generating...' : '🎵 Generate Music'}</button>
+                                    </form>
+                                </div>
+                            )}
+                            {tab === 'cover' && (
+                                <div>
+                                    <h2 style={{marginBottom:8}}>Create Voice Cover</h2>
+                                    <p style={{color:'#aaa',marginBottom:25}}>Transform songs with Kits.AI voice conversion</p>
+                                    <form className="form" onSubmit={simulate}>
+                                        <div className="form-group">
+                                            <label className="label">Voice Model</label>
+                                            <select className="select"><option>Select voice...</option><option>Pop Female</option><option>Rock Male</option></select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="label">Song File</label>
+                                            <input type="file" className="input" accept="audio/*" />
+                                        </div>
+                                        <button type="submit" className="submit-btn" disabled={loading}>{loading ? '⏳ Processing...' : '🎤 Generate Cover'}</button>
+                                    </form>
+                                </div>
+                            )}
+                            {tab === 'combined' && (
+                                <div>
+                                    <h2 style={{marginBottom:8}}>Original + Your Voice</h2>
+                                    <p style={{color:'#aaa',marginBottom:25}}>Generate music sung in your voice</p>
+                                    <form className="form" onSubmit={simulate}>
+                                        <div className="form-group">
+                                            <label className="label">Music Description</label>
+                                            <textarea className="textarea" value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="Describe your music..." required />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="label">Voice Sample (15-30s)</label>
+                                            <input type="file" className="input" accept="audio/*" />
+                                        </div>
+                                        <button type="submit" className="submit-btn" disabled={loading}>{loading ? '⏳ Generating...' : '✨ Generate'}</button>
+                                    </form>
+                                </div>
+                            )}
+                            {(loading || done) && (
+                                <div className="progress-container">
+                                    <div style={{display:'flex',justifyContent:'space-between'}}>
+                                        <span>{done ? '✅ Complete!' : '🔄 Processing...'}</span>
+                                        <span style={{color: done ? '#4ade80' : '#60a5fa'}}>{progress}%</span>
+                                    </div>
+                                    <div className="progress-bar">
+                                        <div className="progress-fill" style={{width:`${progress}%`, background: done ? '#4ade80' : '#60a5fa'}} />
+                                    </div>
+                                    {done && <p style={{color:'#4ade80',marginTop:15}}>Demo complete! In production, audio would be generated here.</p>}
+                                </div>
+                            )}
+                        </div>
+                    </main>
+                    <footer className="footer">AI Music Generator | Scate AI Case Study | ElevenLabs + Kits.AI</footer>
+                </div>
+            );
+        }
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
